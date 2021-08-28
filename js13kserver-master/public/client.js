@@ -58,7 +58,7 @@
 
         socket.on("start", () => {
             enableButtons();
-            setMessage("Round " + (points.win + points.lose + points.draw + 1));
+            setMessage("Combat Round " + (points.win + points.lose + points.draw + 1));
         });
 
         socket.on("win", () => {
