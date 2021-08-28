@@ -68,22 +68,22 @@
 
         socket.on("lose", () => {
             points.lose++;
-            displayScore("You lose!");
+            displayScore("You die!");
         });
 
         socket.on("draw", () => {
             points.draw++;
-            displayScore("Draw!");
+            displayScore("Draw! ?");
         });
 
         socket.on("end", () => {
-            disableButtons();
-            setMessage("Waiting for opponent...");
+            //isableButtons();
+            setMessage("Player has left, number of players: -");
         });
 
         socket.on("connect", () => {
-            disableButtons();
-            setMessage("Waiting for opponent...");
+            //disableButtons();
+            setMessage("Number of players: -" );
         });
 
         socket.on("disconnect", () => {
@@ -97,10 +97,10 @@
         });
 
         for (let i = 0; i < buttons.length; i++) {
-            ((button, guess) => {
+            ((button, move) => {
                 button.addEventListener("click", function (e) {
-                    disableButtons();
-                    socket.emit("guess", guess);
+                    //disableButtons();
+                    socket.emit("move", move);
                 }, false);
             })(buttons[i], i + 1);
         }
@@ -114,7 +114,7 @@
         buttons = document.getElementsByTagName("button");
         message = document.getElementById("message");
         score = document.getElementById("score");
-        disableButtons();
+        //disableButtons();
         bind();
     }
 

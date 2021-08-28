@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+<style>
+    table, th, td {
+        border:1px solid black;
+        margin: 0 auto;
+    }
+</style>
 <head>
-<title>Rock, Paper, Scissors</title>
+<title>js13k MP Test</title>
 <meta charset="UTF-8">
 </head>
 <body>
@@ -9,9 +15,25 @@
 <div style="text-align:center">
     <h1 id="message"></h1>
     <div>
-        <button>Rock</button>
-        <button>Paper</button>
-        <button>Scissors</button>
+        <table>
+            <tr>
+                <th> </th>
+                <th><button>Up</button></th>
+                <th> </th>
+            </tr>
+            <tr>
+                <th><button>Left</button></th>
+                <th> </th>
+                <th><button>Right</button></th>
+            </tr>
+            <tr>
+                <th> </th>
+                <th><button>Down</button></th>
+                <th> </th>
+            </tr>
+
+
+        </table>
     </div>
     <div id="score"></div>
     <p>

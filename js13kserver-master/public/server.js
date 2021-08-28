@@ -104,15 +104,27 @@ class User {
 	 * Set guess value
 	 * @param {number} guess
 	 */
-	setGuess(guess) {
-		if (
-			!this.opponent ||
-			guess <= GUESS_NO ||
-			guess > GUESS_SCISSORS
-		) {
-			return false;
+	setGuess(move) {
+
+		if(move == 1) {
+			console.log("Move Up: " + move);
+		} else if (move == 2) {
+			console.log("Move Left: " + move);
+		} else if (move == 3) {
+			console.log("Move Right: " + move);
+		} else if (move == 4) {
+			console.log("Move Down: " + move);
+		} else {
+			console.log("Unknown input: " + move);
 		}
-		this.guess = guess;
+		// if (
+		// 	!this.opponent ||
+		// 	guess <= GUESS_NO ||
+		// 	guess > GUESS_SCISSORS
+		// ) {
+		// 	return false;
+		// }
+		// this.guess = guess;
 		return true;
 	}
 
@@ -181,14 +193,25 @@ module.exports = {
 			}
 		});
 
-		socket.on("guess", (guess) => {
-			console.log("Guess: " + socket.id);
-			if (user.setGuess(guess) && user.game.ended()) {
-				user.game.score();
-				user.game.start();
-				storage.get('games', 0).then(games => {
-					storage.set('games', games + 1);
-				});
+		// socket.on("guess", (guess) => {
+		// 	console.log("Guess: " + socket.id);
+		// 	if (user.setGuess(guess) && user.game.ended()) {
+		// 		user.game.score();
+		// 		user.game.start();
+		// 		storage.get('games', 0).then(games => {
+		// 			storage.set('games', games + 1);
+		// 		});
+		// 	}
+		// });
+
+		socket.on("move", (move) => {
+			console.log("Move Player: " + socket.id);
+			if (user.setGuess(move) && user.game.ended()) {
+			// 	user.game.score();
+			// 	user.game.start();
+			// 	storage.get('games', 0).then(games => {
+			// 		storage.set('games', games + 1);
+			// 	});
 			}
 		});
 
