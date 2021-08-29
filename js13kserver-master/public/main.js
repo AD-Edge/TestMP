@@ -26,8 +26,11 @@ let cells = [];
 let Area1 = null;
 let Area1Col = null;
 
-//player data
+//player/(s) data
 let players = [];
+let cPlayer = null;
+let pX = -10;
+let pY = -10;
 
 function createGrid(xIn, yIn) {
     const gridSQR = Sprite({
@@ -48,6 +51,22 @@ function createGrid(xIn, yIn) {
 
     cells.push(gridSQR);
     Area1.addChild(gridSQR);
+}
+
+
+function CreateUserObj(x, y) {
+    const userObj = Sprite({
+        x: x,
+        y: y,
+        color: 'red',
+        width: gDim/2,
+        height: gDim/2,
+
+    });
+
+    players.push(userObj);
+    console.log("new player object created");
+
 }
 
 
@@ -80,6 +99,16 @@ function BuildPixelGrid() {
     });
     Area1.addChild(Area1Col);
 
+
+    cPlayer = Sprite({
+        x: pX,
+        y: pY,
+        color: 'white',
+        width: gDim/2,
+        height: gDim/2,
+    });
+    //Area1.addChild(cPlayer);
+
     for (let i=0; i < gridX; i++) {
         for (let j=0; j < gridY; j++) {
             createGrid(i*gDim,j*gDim);
@@ -91,6 +120,34 @@ function BuildPixelGrid() {
 //rebuild player positions
 function RefreshPlayers() {
 
+
+}
+
+
+//Functions called by CLIENT 
+export function SetClientPosition(x, y) {
+    pX = (x * gDim) - (gDim/4);
+    pY = (y * gDim) - (gDim/4);
+    console.log("SetClientPosition() called " + x + ', ' + y);
+}
+export function SetUserPosition(id, x, y) {  
+    
+    console.log("SetUserPosition() called " + x + ', ' + y);
+}
+export function SetUser(id, val) {  
+    if(val == 0) {
+        console.log("Remove User: " + id);
+        players.splice(players.indexOf(id), 1);
+        console.log("player object deleted");
+
+    } else if (val == 1) {
+        console.log("New User: " + id);
+        const user = new User(id);
+        //players.push(user);
+        
+    } else {
+        console.log("ERROR Unknown User Setting Requested??")
+    }
 
 }
 
@@ -112,6 +169,12 @@ const loop = GameLoop({
             RefreshPlayers();
         }
 
+        if(cPlayer != null) {
+            cPlayer.x = pX;
+            cPlayer.y = pY;
+
+        }
+
         cells.map(gridSQR => {
             gridSQR.update();
         });
@@ -122,8 +185,37 @@ const loop = GameLoop({
         if(Area1) {
             Area1.render();
         }
+
+        players.map(userObj => userObj.render());
+
+        if(cPlayer) {
+            cPlayer.render();
+        }
+
+
     },
 });
 
 //Kick off the gameloop
 loop.start();
+
+
+
+
+/**
+ * Client side user class
+ */
+ class User {
+
+	/**
+	 * @param {Socket} socket
+	 */
+	constructor(id) {
+		this.id = id;
+		this.x = 0;
+		this.y = 0;
+
+        CreateUserObj(this.x, this.y);
+	}
+
+}

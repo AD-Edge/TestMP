@@ -11,13 +11,57 @@ const users = [];
  * @param {User} user
  */
 								//reuse this for combat round kickoff
-function findOpponent(user) {
+// function findOpponent(user) {
+// 	for (let i = 0; i < users.length; i++) {
+// 		if (
+// 			user !== users[i] &&
+// 			users[i].opponent === null
+// 		) {
+// 			new Game(user, users[i]).start();
+// 		}
+// 	}
+// }
+
+//To create NEW user, or remove OLD 
+function configUser(user, val) {
 	for (let i = 0; i < users.length; i++) {
-		if (
-			user !== users[i] &&
-			users[i].opponent === null
-		) {
-			new Game(user, users[i]).start();
+		if (user !== users[i]) {
+			
+			if(val == 0) { //Removal
+				users[i].setUser(user.socket.id, val);
+			} else if (val == 1) { //Addition
+				users[i].setUser(user.socket.id, val);//give prev user new user
+				user.setUser(users[i].id, val); // also give new user previous user
+				
+				
+			}		
+		}
+	}
+
+	//post setup
+	if(val == 0) {
+		removeUser(user);
+		console.log("removal of user: " + user.socket.id);
+	} else if (val == 1) {
+		users.push(user);
+		console.log("addition of user: " + user.socket.id);
+	}
+}
+
+/**
+ * Remove user session 
+ * @param {User} user
+ */
+ function removeUser(user) {
+	users.splice(users.indexOf(user), 1);
+}
+
+function updateUserLocation(user) {
+	var values = user.returnLoc();
+	
+	for (let i = 0; i < users.length; i++) {
+		if (user !== users[i]) {
+			users[i].updateUserLoc(i, values[0], values[1]);
 		}
 	}
 }
@@ -28,12 +72,25 @@ function updateUserCount() {
 	}
 }
 
+function setRandomStart(user) {
+	
+	var randX = Math.floor(getRandomArbitrary(1, 39));
+	var randY = Math.floor(getRandomArbitrary(1, 19));
+	console.log("spawn loc X:" + randX + ', Y:' + randY);
+
+	if(randX != null && randY != null) {
+		user.updateLoc(randX, randY);
+	} else {
+		console.log("ERROR, RANDOM LOCATION GENERATED NULL");
+	}
+
+}
+
 /**
- * Remove user session 
- * @param {User} user
+ * Returns a random number between min (inclusive) and max (exclusive)
  */
-function removeUser(user) {
-	users.splice(users.indexOf(user), 1);
+ function getRandomArbitrary(min, max) {
+    return Math.random() * (max - min) + min;
 }
 
 /**
@@ -107,24 +164,35 @@ class User {
 	constructor(socket) {
 		this.socket = socket;
 		this.game = null;
-		this.opponent = null;
+		//this.opponent = null;
 		this.guess = GUESS_NO;
+		this.x = 0;
+		this.y = 0;
 	}
 
 	/**
-	 * Set guess value
-	 * @param {number} guess
+	 * Set move value
+	 * @param {number} move
 	 */
-	setGuess(move) {
+	setMove(move) {
 
 		if(move == 1) {
-			console.log("Move Up: " + move);
+			//console.log("Move Up: " + move);
+			this.y--;
+			this.updateLoc(this.x, this.y); //update client
+			updateUserLocation(this); //update everyone
 		} else if (move == 2) {
-			console.log("Move Left: " + move);
+			//console.log("Move Left: " + move);
+			this.x--;
+			this.updateLoc(this.x, this.y);
 		} else if (move == 3) {
-			console.log("Move Right: " + move);
+			//console.log("Move Right: " + move);
+			this.x++;
+			this.updateLoc(this.x, this.y);
 		} else if (move == 4) {
-			console.log("Move Down: " + move);
+			//console.log("Move Down: " + move);
+			this.y++;
+			this.updateLoc(this.x, this.y);
 		} else {
 			console.log("Unknown input: " + move);
 		}
@@ -139,24 +207,29 @@ class User {
 		return true;
 	}
 
+	//Return users location coords
+	returnLoc() {
+		return [this.x, this.y];
+	}
+
 	/**
 	 * Start new game
 	 * @param {Game} game
 	 * @param {User} opponent
 	 */
-	start(game, opponent) {
-		this.game = game;
-		this.opponent = opponent;
-		this.guess = GUESS_NO;
-		this.socket.emit("start");
-	}
+	// start(game, opponent) {
+	// 	this.game = game;
+	// 	//this.opponent = opponent;
+	// 	this.guess = GUESS_NO;
+	// 	this.socket.emit("start");
+	// }
 
 	/**
 	 * Terminate game
 	 */
 	end() {
 		this.game = null;
-		this.opponent = null;
+		//this.opponent = null;
 		this.guess = GUESS_NO;
 		this.socket.emit("end");
 	}
@@ -186,6 +259,20 @@ class User {
 		this.socket.emit("updateCount", users.length);
 	}
 
+	setUser(id, val) {
+		this.socket.emit("setUser", id, val);
+	}
+
+	updateLoc(x, y) {
+		this.x = x;
+		this.y = y; 
+		this.socket.emit("updateLoc", this.x, this.y);
+	}
+	
+	updateUserLoc(id, x, y) {
+		this.socket.emit("updateUserLoc", id, x, y);
+	}
+
 }
 
 /**
@@ -197,21 +284,26 @@ module.exports = {
 	io: (socket) => {
 		//Create new user 
 		const user = new User(socket);
-		users.push(user);
-		findOpponent(user);
+		//users.push(user);
+		
+		configUser(user, 1); //add new
+		//findOpponent(user);
+		setRandomStart(user);
+
 		updateUserCount();
 
 		socket.on("disconnect", () => {
 			console.log("Disconnected: " + socket.id);
-			console.log("Currently connected: " + users.length + " users");
+			console.log("Currently connected: " + users.length + " users \n");
 
-			removeUser(user);
+			//removeUser(user);
+			configUser(user, 0); //remove
 			updateUserCount()
 
-			if (user.opponent) {
-				user.opponent.end();
-				findOpponent(user.opponent);
-			}
+			// if (user.opponent) {
+			// 	user.opponent.end();
+			// 	findOpponent(user.opponent);
+			// }
 		});
 
 		// socket.on("updateCount", () => {
@@ -232,7 +324,7 @@ module.exports = {
 
 		socket.on("move", (move) => {
 			console.log("Move Player: " + socket.id);
-			if (user.setGuess(move) && user.game.ended()) {
+			if (user.setMove(move) && user.game.ended()) {
 			// 	user.game.score();
 			// 	user.game.start();
 			// 	storage.get('games', 0).then(games => {
@@ -242,7 +334,7 @@ module.exports = {
 		});
 
 		console.log("Connected: " + socket.id);
-		console.log("Currently connected: " + users.length + " users");
+		console.log("Currently connected: " + users.length + " users \n");
 	},
 
 	stat: (req, res) => {

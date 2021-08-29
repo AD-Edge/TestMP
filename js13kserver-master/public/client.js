@@ -1,5 +1,7 @@
 "use strict";
 
+import { SetClientPosition, SetUserPosition, SetUser } from './main.js';
+
 (function () {
 
     let socket, //Socket.IO client
@@ -61,11 +63,11 @@
      */
     function bind() {
 
-        socket.on("start", () => {
-            enableButtons();
-            setMessage("[Combat Round " + (points.win + points.lose + points.draw + 1) + "]");
-            setMessageConnect("Currenly Online Players: " + count);
-        });
+        // socket.on("start", () => {
+        //     enableButtons();
+        //     setMessage("[Combat Round " + (points.win + points.lose + points.draw + 1) + "]");
+        //     setMessageConnect("Currenly Online Players: " + count);
+        // });
 
         socket.on("win", () => {
             points.win++;
@@ -83,33 +85,49 @@
         });
 
         socket.on("updateCount", (arg) => {
-            //points.draw++;
             console.log("connected: " + arg);
             count = arg;
-            setMessageConnect("Currenly Online Players: " + count);
+            setMessageConnect(count + " Players Currently Online");
+        });
+
+        socket.on("setUser", (arg1, arg2) => {
+            console.log("*** setuser: " + arg1 + ', ' + arg2);
+            SetUser(arg1, arg2);
+        });
+        
+        socket.on("updateLoc", (arg1, arg2) => {
+            console.log("new location X:" + arg1 + ', Y:' + arg2);
+            SetClientPosition(arg1, arg2);
+        });
+        
+        socket.on("updateUserLoc", (arg1, arg2, arg3) => {
+            //console.log("new location X:" + arg1 + ', Y:' + arg2);
+            SetUserPosition(arg1, arg2, arg3);
         });
 
         socket.on("end", () => {
-            //isableButtons();
-            setMessageConnect("Currently Online Players: " + count);
+            //disableButtons();
+            setMessageConnect(count + " Players Currently Online");
         });
 
         socket.on("connect", () => {
             //disableButtons();
             setMessage("[Session Connected]" );
-            setMessageConnect("Currenly Online Players: " + count)
+            setMessageConnect(count + " Players Currently Online");
         });
-
+        
         socket.on("disconnect", () => {
             disableButtons();
             setMessage("[Connection lost]");
-            setMessageConnect("Currenly Online Players: n/a")
+            setMessageConnect("Attempting to reconnect...")
+            //setMessageConnect("Currenly Online Players: n/a")
         });
 
         socket.on("error", () => {
             disableButtons();
             setMessage("[Connection error]");
-            setMessageConnect("Currenly Online Players: n/a")
+            setMessageConnect("Attempting to reconnect...")
+            //setMessageConnect("Currenly Online Players: n/a")
         });
 
         for (let i = 0; i < buttons.length; i++) {
