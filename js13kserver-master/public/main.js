@@ -54,10 +54,10 @@ function createGrid(xIn, yIn) {
 }
 
 
-function CreateUserObj(x, y) {
+function CreateUserObj(xIn, yIn) {
     const userObj = Sprite({
-        x: x,
-        y: y,
+        x: xIn,
+        y: yIn,
         color: 'red',
         width: gDim/2,
         height: gDim/2,
@@ -65,7 +65,7 @@ function CreateUserObj(x, y) {
     });
 
     players.push(userObj);
-    console.log("new player object created");
+    console.log("new player object created, x:" + xIn + ", " + yIn);
 
 }
 
@@ -125,16 +125,19 @@ function RefreshPlayers() {
 
 
 //Functions called by CLIENT 
-export function SetClientPosition(x, y) {
-    pX = (x * gDim) - (gDim/4);
-    pY = (y * gDim) - (gDim/4);
-    console.log("SetClientPosition() called " + x + ', ' + y);
+export function SetClientPosition(id, x, y) {
+
+    const user = new User(id, x, y);
+        
+    // pX = (x * gDim) - (gDim/4);
+    // pY = (y * gDim) - (gDim/4);
+    //console.log("SetClientPosition() called for" + x + ', ' + y);
 }
 export function SetUserPosition(id, x, y) {  
     
-    console.log("SetUserPosition() called " + x + ', ' + y);
+    console.log("SetUserPosition() called for id: " + id + " loc: " + x + ', ' + y);
 }
-export function SetUser(id, val) {  
+export function SetUser(id, val, x, y) {  
     if(val == 0) {
         console.log("Remove User: " + id);
         players.splice(players.indexOf(id), 1);
@@ -142,8 +145,7 @@ export function SetUser(id, val) {
 
     } else if (val == 1) {
         console.log("New User: " + id);
-        const user = new User(id);
-        //players.push(user);
+        const user = new User(id, x, y);
         
     } else {
         console.log("ERROR Unknown User Setting Requested??")
@@ -210,10 +212,10 @@ loop.start();
 	/**
 	 * @param {Socket} socket
 	 */
-	constructor(id) {
+	constructor(id, x ,y) {
 		this.id = id;
-		this.x = 0;
-		this.y = 0;
+		this.x = (x * gDim) - (gDim/4);;
+		this.y = (y * gDim) - (gDim/4);;
 
         CreateUserObj(this.x, this.y);
 	}

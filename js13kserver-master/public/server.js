@@ -22,17 +22,16 @@ const users = [];
 // 	}
 // }
 
-//To create NEW user, or remove OLD 
+//To create NEW user, or remove OLD
 function configUser(user, val) {
 	for (let i = 0; i < users.length; i++) {
 		if (user !== users[i]) {
 			
 			if(val == 0) { //Removal
-				users[i].setUser(user.socket.id, val);
+				users[i].setUser(user.socket.id, val, 0 , 0);
 			} else if (val == 1) { //Addition
-				users[i].setUser(user.socket.id, val);//give prev user new user
-				user.setUser(users[i].id, val); // also give new user previous user
-				
+				users[i].setUser(user.socket.id, val, user.x, user.y); //give prev user new user
+				user.setUser(users[i].socket.id, val, users[i].x, users[i].y); // also give new user previous user
 				
 			}		
 		}
@@ -57,11 +56,11 @@ function configUser(user, val) {
 }
 
 function updateUserLocation(user) {
-	var values = user.returnLoc();
+	var pos = user.returnLoc();
 	
 	for (let i = 0; i < users.length; i++) {
 		if (user !== users[i]) {
-			users[i].updateUserLoc(i, values[0], values[1]);
+			users[i].updateUserLoc(user.socket.id, pos[0], pos[1]);
 		}
 	}
 }
@@ -259,14 +258,15 @@ class User {
 		this.socket.emit("updateCount", users.length);
 	}
 
-	setUser(id, val) {
-		this.socket.emit("setUser", id, val);
+	setUser(id, val, x, y) {
+		console.log("sending... " + id);
+		this.socket.emit("setUser", id, val, x, y);
 	}
 
 	updateLoc(x, y) {
 		this.x = x;
 		this.y = y; 
-		this.socket.emit("updateLoc", this.x, this.y);
+		this.socket.emit("updateLoc", this.socket.id, this.x, this.y);
 	}
 	
 	updateUserLoc(id, x, y) {
@@ -287,19 +287,20 @@ module.exports = {
 		//users.push(user);
 		
 		configUser(user, 1); //add new
+		updateUserCount();
+		
 		//findOpponent(user);
 		setRandomStart(user);
 
-		updateUserCount();
 
 		socket.on("disconnect", () => {
 			console.log("Disconnected: " + socket.id);
-			console.log("Currently connected: " + users.length + " users \n");
-
+			
 			//removeUser(user);
 			configUser(user, 0); //remove
 			updateUserCount()
-
+			
+			console.log("Currently connected: " + users.length + " users \n");
 			// if (user.opponent) {
 			// 	user.opponent.end();
 			// 	findOpponent(user.opponent);

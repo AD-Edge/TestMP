@@ -90,14 +90,14 @@ import { SetClientPosition, SetUserPosition, SetUser } from './main.js';
             setMessageConnect(count + " Players Currently Online");
         });
 
-        socket.on("setUser", (arg1, arg2) => {
-            console.log("*** setuser: " + arg1 + ', ' + arg2);
-            SetUser(arg1, arg2);
+        socket.on("setUser", (arg1, arg2, arg3, arg4) => {
+            console.log("*** setuser: " + arg1 + ', ' + arg2 + ", X:" + arg3 + ", Y:" + arg4);
+            SetUser(arg1, arg2, arg3, arg4);
         });
         
-        socket.on("updateLoc", (arg1, arg2) => {
-            console.log("new location X:" + arg1 + ', Y:' + arg2);
-            SetClientPosition(arg1, arg2);
+        socket.on("updateLoc", (arg1, arg2, arg3) => {
+            console.log("new location for " + arg1 + " X:" + arg2 + ', Y:' + arg3);
+            SetClientPosition(arg1, arg2, arg3);
         });
         
         socket.on("updateUserLoc", (arg1, arg2, arg3) => {
