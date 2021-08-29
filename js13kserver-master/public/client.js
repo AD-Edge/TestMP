@@ -5,12 +5,14 @@
     let socket, //Socket.IO client
         buttons, //Button elements
         message, //Message element
+        connect,
         score, //Score element
         points = { //Game points
             draw: 0,
             win: 0,
             lose: 0
-        };
+        },
+        count;
 
     /**
      * Disable all button
@@ -37,6 +39,9 @@
     function setMessage(text) {
         message.innerHTML = text;
     }
+    function setMessageConnect(text) {
+        connect.innerHTML = text;
+    }
 
     /**
      * Set score text
@@ -58,7 +63,8 @@
 
         socket.on("start", () => {
             enableButtons();
-            setMessage("Combat Round " + (points.win + points.lose + points.draw + 1));
+            setMessage("[Combat Round " + (points.win + points.lose + points.draw + 1) + "]");
+            setMessageConnect("Currenly Online Players: " + count);
         });
 
         socket.on("win", () => {
@@ -73,27 +79,37 @@
 
         socket.on("draw", () => {
             points.draw++;
-            displayScore("Draw! ?");
+            displayScore("Draw! wat?");
+        });
+
+        socket.on("updateCount", (arg) => {
+            //points.draw++;
+            console.log("connected: " + arg);
+            count = arg;
+            setMessageConnect("Currenly Online Players: " + count);
         });
 
         socket.on("end", () => {
             //isableButtons();
-            setMessage("Player has left, number of players: -");
+            setMessageConnect("Currently Online Players: " + count);
         });
 
         socket.on("connect", () => {
             //disableButtons();
-            setMessage("Number of players: -" );
+            setMessage("[Session Connected]" );
+            setMessageConnect("Currenly Online Players: " + count)
         });
 
         socket.on("disconnect", () => {
             disableButtons();
-            setMessage("Connection lost!");
+            setMessage("[Connection lost]");
+            setMessageConnect("Currenly Online Players: n/a")
         });
 
         socket.on("error", () => {
             disableButtons();
-            setMessage("Connection error!");
+            setMessage("[Connection error]");
+            setMessageConnect("Currenly Online Players: n/a")
         });
 
         for (let i = 0; i < buttons.length; i++) {
@@ -113,7 +129,9 @@
         socket = io({ upgrade: false, transports: ["websocket"] });
         buttons = document.getElementsByTagName("button");
         message = document.getElementById("message");
+        connect = document.getElementById("connect");
         score = document.getElementById("score");
+        count = 0;
         //disableButtons();
         bind();
     }

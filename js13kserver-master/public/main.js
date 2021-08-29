@@ -9,8 +9,8 @@ console.log(canvas);
 console.log(context);
 
 //Grid Calcs / variables
-var gridX = 8; //number of grid spaces, from 2 - 32
-var gridY = 8; //number of grid spaces, from 2 - 32
+var gridX = 39; //number of grid spaces, from 2 - 32
+var gridY = 19; //number of grid spaces, from 2 - 32
 
 var areaX = 16 * gridX; //size of grid area 
 var areaY = 16 * gridY;
@@ -19,11 +19,15 @@ var gDim = areaX / gridX;
 var pixThic = 1;
 
 var redraw = true;
+var refresh = true;
 //Array for cells
 let cells = [];
 
 let Area1 = null;
 let Area1Col = null;
+
+//player data
+let players = [];
 
 function createGrid(xIn, yIn) {
     const gridSQR = Sprite({
@@ -58,7 +62,7 @@ function BuildPixelGrid() {
         height: areaY,
         
         render() {
-            this.context.setLineDash([20,10]);
+            //this.context.setLineDash([2,10]);
             this.context.lineWidth = 3;
             this.context.strokeStyle = 'black';
             this.context.strokeRect(0, 0, this.width, this.height);
@@ -84,6 +88,12 @@ function BuildPixelGrid() {
 
 }
 
+//rebuild player positions
+function RefreshPlayers() {
+
+
+}
+
 
 //GameLoop setup
 //Requires update & render functions
@@ -96,6 +106,10 @@ const loop = GameLoop({
             //CleanUpGrid();
 
             BuildPixelGrid()
+        }
+
+        if(refresh) {
+            RefreshPlayers();
         }
 
         cells.map(gridSQR => {

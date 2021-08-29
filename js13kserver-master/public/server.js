@@ -10,6 +10,7 @@ const users = [];
  * Find opponent for a user
  * @param {User} user
  */
+								//reuse this for combat round kickoff
 function findOpponent(user) {
 	for (let i = 0; i < users.length; i++) {
 		if (
@@ -21,8 +22,14 @@ function findOpponent(user) {
 	}
 }
 
+function updateUserCount() {
+	for (let i = 0; i < users.length; i++) {
+		users[i].updateCount();
+	}
+}
+
 /**
- * Remove user session
+ * Remove user session 
  * @param {User} user
  */
 function removeUser(user) {
@@ -70,6 +77,8 @@ class Game {
 		) {
 			this.user1.win();
 			this.user2.lose();
+
+
 		} else if (
 			this.user2.guess === GUESS_ROCK && this.user1.guess === GUESS_SCISSORS ||
 			this.user2.guess === GUESS_PAPER && this.user1.guess === GUESS_ROCK ||
@@ -77,6 +86,8 @@ class Game {
 		) {
 			this.user2.win();
 			this.user1.lose();
+
+
 		} else {
 			this.user1.draw();
 			this.user2.draw();
@@ -171,6 +182,10 @@ class User {
 		this.socket.emit("draw", this.opponent.guess);
 	}
 
+	updateCount() {
+		this.socket.emit("updateCount", users.length);
+	}
+
 }
 
 /**
@@ -180,18 +195,29 @@ class User {
 module.exports = {
 
 	io: (socket) => {
+		//Create new user 
 		const user = new User(socket);
 		users.push(user);
 		findOpponent(user);
+		updateUserCount();
 
 		socket.on("disconnect", () => {
 			console.log("Disconnected: " + socket.id);
+			console.log("Currently connected: " + users.length + " users");
+
 			removeUser(user);
+			updateUserCount()
+
 			if (user.opponent) {
 				user.opponent.end();
 				findOpponent(user.opponent);
 			}
 		});
+
+		// socket.on("updateCount", () => {
+		// 	console.log("User has connected, currently connected: " + users.length + " users");
+
+		// });
 
 		// socket.on("guess", (guess) => {
 		// 	console.log("Guess: " + socket.id);
@@ -216,11 +242,12 @@ module.exports = {
 		});
 
 		console.log("Connected: " + socket.id);
+		console.log("Currently connected: " + users.length + " users");
 	},
 
 	stat: (req, res) => {
 		storage.get('games', 0).then(games => {
-			res.send(`<h1>Games played: ${games}</h1>`);
+			res.send(`<h1>Rounds played: ${games}</h1>`);
 		});
 	}
 
