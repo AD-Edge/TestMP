@@ -1,6 +1,6 @@
 "use strict";
 
-import { SetClientPosition, SetUserPosition, SetUser } from './main.js';
+import { SetClientPosition, SetOpponentPosition, SetUser } from './main.js';
 
 (function () {
 
@@ -102,7 +102,7 @@ import { SetClientPosition, SetUserPosition, SetUser } from './main.js';
         
         socket.on("updateUserLoc", (arg1, arg2, arg3) => {
             //console.log("new location X:" + arg1 + ', Y:' + arg2);
-            SetUserPosition(arg1, arg2, arg3);
+            SetOpponentPosition(arg1, arg2, arg3);
         });
 
         socket.on("end", () => {
@@ -111,7 +111,7 @@ import { SetClientPosition, SetUserPosition, SetUser } from './main.js';
         });
 
         socket.on("connect", () => {
-            //disableButtons();
+            enableButtons();
             setMessage("[Session Connected]" );
             setMessageConnect(count + " Players Currently Online");
         });

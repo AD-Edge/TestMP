@@ -27,8 +27,11 @@ let Area1 = null;
 let Area1Col = null;
 
 //player/(s) data
-let players = [];
+let players = []; //user data
+let opponents = []; //opponents to render
+
 let cPlayer = null;
+let cPlayerID = '';
 let pX = -10;
 let pY = -10;
 
@@ -52,23 +55,6 @@ function createGrid(xIn, yIn) {
     cells.push(gridSQR);
     Area1.addChild(gridSQR);
 }
-
-
-function CreateUserObj(xIn, yIn) {
-    const userObj = Sprite({
-        x: xIn,
-        y: yIn,
-        color: 'red',
-        width: gDim/2,
-        height: gDim/2,
-
-    });
-
-    players.push(userObj);
-    console.log("new player object created, x:" + xIn + ", " + yIn);
-
-}
-
 
 function BuildPixelGrid() {
 
@@ -117,36 +103,85 @@ function BuildPixelGrid() {
 
 }
 
-//rebuild player positions
-function RefreshPlayers() {
+function CreateUserObj(xIn, yIn) {
+    const userObj = Sprite({
+        x: xIn,
+        y: yIn,
+        color: 'red',
+        width: gDim/2,
+        height: gDim/2,
 
+    });
+
+    opponents.push(userObj);
+    //console.log("new player object created, x:" + xIn + ", " + yIn);
 
 }
 
+//rebuild player positions
+function RefreshPlayers() {
+    //cleanup
+    for(let i=0; i < opponents.length; i++) {
+        opponents[i].isActive = false;
+    }
+    opponents.length = 0;
+    opponents = []
+
+    //rebuild
+    for(let i=0; i < players.length; i++) {
+        CreateUserObj(players[i].x, players[i].y);
+    }
+}
 
 //Functions called by CLIENT 
 export function SetClientPosition(id, x, y) {
 
-    const user = new User(id, x, y);
-        
-    // pX = (x * gDim) - (gDim/4);
-    // pY = (y * gDim) - (gDim/4);
-    //console.log("SetClientPosition() called for" + x + ', ' + y);
-}
-export function SetUserPosition(id, x, y) {  
-    
-    console.log("SetUserPosition() called for id: " + id + " loc: " + x + ', ' + y);
-}
-export function SetUser(id, val, x, y) {  
-    if(val == 0) {
-        console.log("Remove User: " + id);
-        players.splice(players.indexOf(id), 1);
-        console.log("player object deleted");
+    pX = (x * gDim) - (gDim/4);
+    pY = (y * gDim) - (gDim/4);
 
-    } else if (val == 1) {
-        console.log("New User: " + id);
-        const user = new User(id, x, y);
+    if(cPlayerID == null) {
+        cPlayerID = id; //set ID
+    }
+    console.log("SetClientPosition() called for " + cPlayerID + ": " + x + ', ' + y);
+    //const user = new User(id, pX, pY, 0);
+    //players.push(user);
         
+}
+
+//for updating opponent positions
+export function SetOpponentPosition(id, x, y) {
+    
+    for(let i=0; i < players.length; i++) {
+        if(players[i].id = id) {
+            players[i].x = (x * gDim) - (gDim/4);
+            players[i].y = (y * gDim) - (gDim/4);
+            
+            RefreshPlayers()
+            return;
+        }
+    }
+
+    console.log("opponent not found: " + id);
+    
+}
+
+export function SetUser(id, val, x, y) {  
+    if (val == 0) {
+        console.log("Remove opponent: " + id);
+        players.splice(players.indexOf(id), 1);
+        //console.log("player object deleted");
+
+        RefreshPlayers();
+        
+    } else if (val == 1) {
+        console.log("Adding new opponent: " + id);
+        
+        const user = new User(id, x, y);
+        players.push(user);
+        console.log("new player object created, x:" + x + ", " + y);
+
+        RefreshPlayers();
+
     } else {
         console.log("ERROR Unknown User Setting Requested??")
     }
@@ -167,9 +202,9 @@ const loop = GameLoop({
             BuildPixelGrid()
         }
 
-        if(refresh) {
-            RefreshPlayers();
-        }
+        // if(refresh) {
+        //     RefreshPlayers();
+        // }
 
         if(cPlayer != null) {
             cPlayer.x = pX;
@@ -188,7 +223,7 @@ const loop = GameLoop({
             Area1.render();
         }
 
-        players.map(userObj => userObj.render());
+        opponents.map(userObj => userObj.render());
 
         if(cPlayer) {
             cPlayer.render();
@@ -212,12 +247,12 @@ loop.start();
 	/**
 	 * @param {Socket} socket
 	 */
-	constructor(id, x ,y) {
+	constructor(id, x, y) {
 		this.id = id;
-		this.x = (x * gDim) - (gDim/4);;
-		this.y = (y * gDim) - (gDim/4);;
+		this.x = (x * gDim) - (gDim/4);
+		this.y = (y * gDim) - (gDim/4);
 
-        CreateUserObj(this.x, this.y);
+        //CreateUserObj(this.x, this.y);
 	}
 
 }

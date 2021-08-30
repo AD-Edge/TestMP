@@ -29,9 +29,12 @@ function configUser(user, val) {
 			
 			if(val == 0) { //Removal
 				users[i].setUser(user.socket.id, val, 0 , 0);
+				
 			} else if (val == 1) { //Addition
-				users[i].setUser(user.socket.id, val, user.x, user.y); //give prev user new user
-				user.setUser(users[i].socket.id, val, users[i].x, users[i].y); // also give new user previous user
+				//give prev user new user
+				users[i].setUser(user.socket.id, val, user.x, user.y); 
+				// also give new user preexisting user
+				user.setUser(users[i].socket.id, val, users[i].x, users[i].y); 
 				
 			}		
 		}
@@ -51,7 +54,7 @@ function configUser(user, val) {
  * Remove user session 
  * @param {User} user
  */
- function removeUser(user) {
+function removeUser(user) {
 	users.splice(users.indexOf(user), 1);
 }
 
@@ -65,30 +68,30 @@ function updateUserLocation(user) {
 	}
 }
 
-function updateUserCount() {
+//updates connected count
+function updateConnectedCount() {
 	for (let i = 0; i < users.length; i++) {
 		users[i].updateCount();
 	}
 }
 
+//set new client start location/setup
 function setRandomStart(user) {
-	
 	var randX = Math.floor(getRandomArbitrary(1, 39));
 	var randY = Math.floor(getRandomArbitrary(1, 19));
 	console.log("spawn loc X:" + randX + ', Y:' + randY);
 
-	if(randX != null && randY != null) {
+	if (randX != null && randY != null) {
 		user.updateLoc(randX, randY);
 	} else {
 		console.log("ERROR, RANDOM LOCATION GENERATED NULL");
 	}
-
 }
 
 /**
  * Returns a random number between min (inclusive) and max (exclusive)
  */
- function getRandomArbitrary(min, max) {
+function getRandomArbitrary(min, max) {
     return Math.random() * (max - min) + min;
 }
 
@@ -96,7 +99,6 @@ function setRandomStart(user) {
  * Game class
  */
 class Game {
-
 	/**
 	 * @param {User} user1
 	 * @param {User} user2
@@ -163,7 +165,6 @@ class User {
 	constructor(socket) {
 		this.socket = socket;
 		this.game = null;
-		//this.opponent = null;
 		this.guess = GUESS_NO;
 		this.x = 0;
 		this.y = 0;
@@ -184,14 +185,17 @@ class User {
 			//console.log("Move Left: " + move);
 			this.x--;
 			this.updateLoc(this.x, this.y);
+			updateUserLocation(this);
 		} else if (move == 3) {
 			//console.log("Move Right: " + move);
 			this.x++;
 			this.updateLoc(this.x, this.y);
+			updateUserLocation(this);
 		} else if (move == 4) {
 			//console.log("Move Down: " + move);
 			this.y++;
 			this.updateLoc(this.x, this.y);
+			updateUserLocation(this);
 		} else {
 			console.log("Unknown input: " + move);
 		}
@@ -254,21 +258,25 @@ class User {
 		this.socket.emit("draw", this.opponent.guess);
 	}
 
+	//connection count 
 	updateCount() {
 		this.socket.emit("updateCount", users.length);
 	}
 
+	//setup new user
 	setUser(id, val, x, y) {
-		console.log("sending... " + id);
+		console.log("sending... " + id + " x::" + x + ", y::" + y);
 		this.socket.emit("setUser", id, val, x, y);
 	}
 
+	//update client location
 	updateLoc(x, y) {
 		this.x = x;
 		this.y = y; 
 		this.socket.emit("updateLoc", this.socket.id, this.x, this.y);
 	}
 	
+	//update location of opponent users
 	updateUserLoc(id, x, y) {
 		this.socket.emit("updateUserLoc", id, x, y);
 	}
@@ -286,11 +294,12 @@ module.exports = {
 		const user = new User(socket);
 		//users.push(user);
 		
-		configUser(user, 1); //add new
-		updateUserCount();
-		
 		//findOpponent(user);
 		setRandomStart(user);
+
+		configUser(user, 1); //add new
+		updateConnectedCount();
+		
 
 
 		socket.on("disconnect", () => {
@@ -298,7 +307,7 @@ module.exports = {
 			
 			//removeUser(user);
 			configUser(user, 0); //remove
-			updateUserCount()
+			updateConnectedCount()
 			
 			console.log("Currently connected: " + users.length + " users \n");
 			// if (user.opponent) {
@@ -325,13 +334,15 @@ module.exports = {
 
 		socket.on("move", (move) => {
 			console.log("Move Player: " + socket.id);
-			if (user.setMove(move) && user.game.ended()) {
+			user.setMove(move);
+			
+			//if (user.setMove(move) && user.game.ended()) {
 			// 	user.game.score();
 			// 	user.game.start();
 			// 	storage.get('games', 0).then(games => {
 			// 		storage.set('games', games + 1);
 			// 	});
-			}
+			//}
 		});
 
 		console.log("Connected: " + socket.id);
