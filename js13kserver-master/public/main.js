@@ -31,7 +31,7 @@ let players = []; //user data
 let opponents = []; //opponents to render
 
 let cPlayer = null;
-let cPlayerID = '';
+let cPlayerID = null;
 let pX = -10;
 let pY = -10;
 
@@ -127,9 +127,15 @@ function RefreshPlayers() {
     opponents.length = 0;
     opponents = []
 
+    console.log("rebuilding " + players.length + " user objects:");
+
     //rebuild
     for(let i=0; i < players.length; i++) {
+        console.log("listing user obj #" + i + ": " + players[i].id);
         CreateUserObj(players[i].x, players[i].y);
+
+        console.log("rebuilding opponent " + players[i].id 
+            + " @ pos " + players[i].x + ", " + players[i].y);
     }
 }
 
@@ -142,9 +148,7 @@ export function SetClientPosition(id, x, y) {
     if(cPlayerID == null) {
         cPlayerID = id; //set ID
     }
-    console.log("SetClientPosition() called for " + cPlayerID + ": " + x + ', ' + y);
-    //const user = new User(id, pX, pY, 0);
-    //players.push(user);
+    console.log("Setup Client " + cPlayerID + " at pos: " + x + ", " + y);
         
 }
 
@@ -152,10 +156,12 @@ export function SetClientPosition(id, x, y) {
 export function SetOpponentPosition(id, x, y) {
     
     for(let i=0; i < players.length; i++) {
-        if(players[i].id = id) {
+        if(players[i].id == id) {
             players[i].x = (x * gDim) - (gDim/4);
             players[i].y = (y * gDim) - (gDim/4);
             
+            console.log("Moving player " + id + " to pos: " + x + ", " + y);
+
             RefreshPlayers()
             return;
         }
@@ -180,14 +186,16 @@ export function SetUser(id, val, x, y) {
         players.push(user);
         console.log("new player object created, x:" + x + ", " + y);
 
+        for(let i=0; i < players.length; i++) {
+            console.log("SetUser() listing user obj #" + i + ": " + players[i].id);
+        }
+
         RefreshPlayers();
 
     } else {
         console.log("ERROR Unknown User Setting Requested??")
     }
-
 }
-
 
 //GameLoop setup
 //Requires update & render functions

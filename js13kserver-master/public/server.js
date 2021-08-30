@@ -63,6 +63,8 @@ function updateUserLocation(user) {
 	
 	for (let i = 0; i < users.length; i++) {
 		if (user !== users[i]) {
+			console.log("sending updated coords to " + users[i].socket.id + 
+			" for " + user.socket.id + " : " + pos[0] + ', ' + pos[1]);
 			users[i].updateUserLoc(user.socket.id, pos[0], pos[1]);
 		}
 	}
@@ -265,7 +267,7 @@ class User {
 
 	//setup new user
 	setUser(id, val, x, y) {
-		console.log("sending... " + id + " x::" + x + ", y::" + y);
+		console.log("...sending... setUser " + id + " x::" + x + ", y::" + y);
 		this.socket.emit("setUser", id, val, x, y);
 	}
 
@@ -334,15 +336,16 @@ module.exports = {
 
 		socket.on("move", (move) => {
 			console.log("Move Player: " + socket.id);
-			user.setMove(move);
+			//var uer = users.find( ({ id }) => socket.id === socket.id );
+
+			for(var i=0; i<users.length; i++) {
+				//console.log(uer);
+				if(users[i].socket.id == socket.id) {
+					users[i].setMove(move);
+					return;
+				}
+			}
 			
-			//if (user.setMove(move) && user.game.ended()) {
-			// 	user.game.score();
-			// 	user.game.start();
-			// 	storage.get('games', 0).then(games => {
-			// 		storage.set('games', games + 1);
-			// 	});
-			//}
 		});
 
 		console.log("Connected: " + socket.id);

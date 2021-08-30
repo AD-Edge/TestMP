@@ -42,7 +42,15 @@ import { SetClientPosition, SetOpponentPosition, SetUser } from './main.js';
         message.innerHTML = text;
     }
     function setMessageConnect(text) {
-        connect.innerHTML = text;
+        if(text == isNaN) {
+            connect.innerHTML = text;
+        } else if (text == 1) {
+            connect.innerHTML = text + " Player Currently Online";
+        } else if (text > 1) {
+            connect.innerHTML = text + " Players Currently Online";
+        } else {
+            connect.innerHTML = "huh? something went wrong...";
+        }
     }
 
     /**
@@ -87,11 +95,11 @@ import { SetClientPosition, SetOpponentPosition, SetUser } from './main.js';
         socket.on("updateCount", (arg) => {
             console.log("connected: " + arg);
             count = arg;
-            setMessageConnect(count + " Players Currently Online");
+            setMessageConnect(count);
         });
 
         socket.on("setUser", (arg1, arg2, arg3, arg4) => {
-            console.log("*** setuser: " + arg1 + ', ' + arg2 + ", X:" + arg3 + ", Y:" + arg4);
+            console.log("...setuser... " + arg1 + ', ' + arg2 + ", X:" + arg3 + ", Y:" + arg4);
             SetUser(arg1, arg2, arg3, arg4);
         });
         
@@ -107,13 +115,13 @@ import { SetClientPosition, SetOpponentPosition, SetUser } from './main.js';
 
         socket.on("end", () => {
             //disableButtons();
-            setMessageConnect(count + " Players Currently Online");
+            setMessageConnect(count);
         });
 
         socket.on("connect", () => {
             enableButtons();
             setMessage("[Session Connected]" );
-            setMessageConnect(count + " Players Currently Online");
+            setMessageConnect(count);
         });
         
         socket.on("disconnect", () => {
