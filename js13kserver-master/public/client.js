@@ -98,9 +98,9 @@ import { SetClientPosition, SetOpponentPosition, SetUser } from './main.js';
             setMessageConnect(count);
         });
 
-        socket.on("setUser", (arg1, arg2, arg3, arg4) => {
+        socket.on("setUser", (arg1, arg2, arg3, arg4, arg5) => {
             console.log("...setuser... " + arg1 + ', ' + arg2 + ", X:" + arg3 + ", Y:" + arg4);
-            SetUser(arg1, arg2, arg3, arg4);
+            SetUser(arg1, arg2, arg3, arg4, arg5);
         });
         
         socket.on("updateLoc", (arg1, arg2, arg3) => {
@@ -113,6 +113,11 @@ import { SetClientPosition, SetOpponentPosition, SetUser } from './main.js';
             SetOpponentPosition(arg1, arg2, arg3);
         });
 
+        socket.on("sendCombat", (arg1, arg2, arg3, arg4) => {
+            //console.log("new location X:" + arg1 + ', Y:' + arg2);
+            SetCombatZone(arg1, arg2, arg3, arg4);
+        });
+        
         socket.on("end", () => {
             //disableButtons();
             setMessageConnect(count);

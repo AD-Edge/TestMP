@@ -5,6 +5,7 @@
  * @param {Array} users
  */
 const users = [];
+const zones = [];
 
 /**
  * Find opponent for a user
@@ -28,13 +29,13 @@ function configUser(user, val) {
 		if (user !== users[i]) {
 			
 			if(val == 0) { //Removal
-				users[i].setUser(user.socket.id, val, 0 , 0);
+				users[i].setUser(user.socket.id, val, 0 , 0, 0);
 				
 			} else if (val == 1) { //Addition
 				//give prev user new user
-				users[i].setUser(user.socket.id, val, user.x, user.y); 
+				users[i].setUser(user.socket.id, val, user.x, user.y, user.attRad); 
 				// also give new user preexisting user
-				user.setUser(users[i].socket.id, val, users[i].x, users[i].y); 
+				user.setUser(users[i].socket.id, val, users[i].x, users[i].y, user.attRad); 
 				
 			}		
 		}
@@ -65,9 +66,27 @@ function updateUserLocation(user) {
 		if (user !== users[i]) {
 			console.log("sending updated coords to " + users[i].socket.id + 
 			" for " + user.socket.id + " : " + pos[0] + ', ' + pos[1]);
+
 			users[i].updateUserLoc(user.socket.id, pos[0], pos[1]);
 		}
 	}
+}
+
+function initiateCombat(usr) { 
+	//check if already in a zone 
+	for (let i = 0; i < users.length; i++) {
+		if (usr == users[i]) {
+			users[i].sendCombat(usr.socket.id, usr.x, usr.y, usr.rad);
+		}
+	}
+
+	//if so, add to zone 
+
+	//else create new zone
+	const cmbt = new Zone(usr.x, usr.y);
+	zones.push(cmbt);
+	console.log("New Combat Zone Initiated by " + 
+		usr.socket.id + " at " + usr.x + ", " + usr.y + " with radius " + rad);
 }
 
 //updates connected count
@@ -98,66 +117,7 @@ function getRandomArbitrary(min, max) {
 }
 
 /**
- * Game class
- */
-class Game {
-	/**
-	 * @param {User} user1
-	 * @param {User} user2
-	 */
-	constructor(user1, user2) {
-		this.user1 = user1;
-		this.user2 = user2;
-	}
-
-	/**
-	 * Start new game
-	 */
-	start() {
-		this.user1.start(this, this.user2);
-		this.user2.start(this, this.user1);
-	}
-
-	/**
-	 * Is game ended
-	 * @return {boolean}
-	 */
-	ended() {
-		return this.user1.guess !== GUESS_NO && this.user2.guess !== GUESS_NO;
-	}
-
-	/**
-	 * Final score
-	 */
-	score() {
-		if (
-			this.user1.guess === GUESS_ROCK && this.user2.guess === GUESS_SCISSORS ||
-			this.user1.guess === GUESS_PAPER && this.user2.guess === GUESS_ROCK ||
-			this.user1.guess === GUESS_SCISSORS && this.user2.guess === GUESS_PAPER
-		) {
-			this.user1.win();
-			this.user2.lose();
-
-
-		} else if (
-			this.user2.guess === GUESS_ROCK && this.user1.guess === GUESS_SCISSORS ||
-			this.user2.guess === GUESS_PAPER && this.user1.guess === GUESS_ROCK ||
-			this.user2.guess === GUESS_SCISSORS && this.user1.guess === GUESS_PAPER
-		) {
-			this.user2.win();
-			this.user1.lose();
-
-
-		} else {
-			this.user1.draw();
-			this.user2.draw();
-		}
-	}
-
-}
-
-/**
- * User session class
+ * User Session Class
  */
 class User {
 
@@ -170,6 +130,7 @@ class User {
 		this.guess = GUESS_NO;
 		this.x = 0;
 		this.y = 0;
+		this.attRad = 5;
 	}
 
 	/**
@@ -189,11 +150,15 @@ class User {
 			this.updateLoc(this.x, this.y);
 			updateUserLocation(this);
 		} else if (move == 3) {
+			console.log("Combat Engage: " + move);
+			this.combat = true;
+			initiateCombat(this);
+		} else if (move == 4) {
 			//console.log("Move Right: " + move);
 			this.x++;
 			this.updateLoc(this.x, this.y);
 			updateUserLocation(this);
-		} else if (move == 4) {
+		} else if (move == 5) {
 			//console.log("Move Down: " + move);
 			this.y++;
 			this.updateLoc(this.x, this.y);
@@ -229,46 +194,15 @@ class User {
 	// 	this.socket.emit("start");
 	// }
 
-	/**
-	 * Terminate game
-	 */
-	end() {
-		this.game = null;
-		//this.opponent = null;
-		this.guess = GUESS_NO;
-		this.socket.emit("end");
-	}
-
-	/**
-	 * Trigger win event
-	 */
-	win() {
-		this.socket.emit("win", this.opponent.guess);
-	}
-
-	/**
-	 * Trigger lose event
-	 */
-	lose() {
-		this.socket.emit("lose", this.opponent.guess);
-	}
-
-	/**
-	 * Trigger draw event
-	 */
-	draw() {
-		this.socket.emit("draw", this.opponent.guess);
-	}
-
 	//connection count 
 	updateCount() {
 		this.socket.emit("updateCount", users.length);
 	}
 
 	//setup new user
-	setUser(id, val, x, y) {
+	setUser(id, val, x, y, rad) {
 		console.log("...sending... setUser " + id + " x::" + x + ", y::" + y);
-		this.socket.emit("setUser", id, val, x, y);
+		this.socket.emit("setUser", id, val, x, y, rad);
 	}
 
 	//update client location
@@ -281,6 +215,28 @@ class User {
 	//update location of opponent users
 	updateUserLoc(id, x, y) {
 		this.socket.emit("updateUserLoc", id, x, y);
+	}
+
+	//Sends combat zone to user
+	sendCombat(id, x, y, rad) {
+		this.socket.emit("sendCombat", id, x, y, rad);
+	}
+
+}
+
+
+/**
+ * Combat Zone Class
+ */
+class Zone {
+
+	constructor(x, y) {
+		this.x = 0;
+		this.y = 0;
+	}
+
+	setZone(x, y) {
+
 	}
 
 }

@@ -131,11 +131,11 @@ function RefreshPlayers() {
 
     //rebuild
     for(let i=0; i < players.length; i++) {
-        console.log("listing user obj #" + i + ": " + players[i].id);
+        //console.log("listing user obj #" + i + ": " + players[i].id);
         CreateUserObj(players[i].x, players[i].y);
 
-        console.log("rebuilding opponent " + players[i].id 
-            + " @ pos " + players[i].x + ", " + players[i].y);
+        // console.log("rebuilding opponent " + players[i].id 
+        //     + " @ pos " + players[i].x + ", " + players[i].y);
     }
 }
 
@@ -171,7 +171,7 @@ export function SetOpponentPosition(id, x, y) {
     
 }
 
-export function SetUser(id, val, x, y) {  
+export function SetUser(id, val, x, y, rad) {  
     if (val == 0) {
         console.log("Remove opponent: " + id);
         players.splice(players.indexOf(id), 1);
@@ -182,19 +182,28 @@ export function SetUser(id, val, x, y) {
     } else if (val == 1) {
         console.log("Adding new opponent: " + id);
         
-        const user = new User(id, x, y);
+        const user = new User(id, x, y, rad);
         players.push(user);
-        console.log("new player object created, x:" + x + ", " + y);
+        //console.log("new player object created, x:" + x + ", " + y);
 
-        for(let i=0; i < players.length; i++) {
-            console.log("SetUser() listing user obj #" + i + ": " + players[i].id);
-        }
+        // for(let i=0; i < players.length; i++) {
+        //     console.log("SetUser() listing user obj #" + i + ": " + players[i].id);
+        // }
 
         RefreshPlayers();
 
     } else {
         console.log("ERROR Unknown User Setting Requested??")
     }
+}
+
+//for updating opponent positions
+export function SetCombatZone(id, x, y, r) {
+    
+
+    
+    console.log("Combat zone started by: " + id);
+    
 }
 
 //GameLoop setup
@@ -255,10 +264,12 @@ loop.start();
 	/**
 	 * @param {Socket} socket
 	 */
-	constructor(id, x, y) {
+	constructor(id, x, y, rad) {
 		this.id = id;
 		this.x = (x * gDim) - (gDim/4);
 		this.y = (y * gDim) - (gDim/4);
+        this.combat = false;
+        this.attRad = rad;
 
         //CreateUserObj(this.x, this.y);
 	}
