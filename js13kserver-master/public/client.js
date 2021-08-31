@@ -1,6 +1,7 @@
 "use strict";
 
-import { SetClientPosition, SetOpponentPosition, SetUser } from './main.js';
+import { SetClientPosition, SetOpponentPosition, SetUser,
+    SetCombatZone } from './main.js';
 
 (function () {
 
@@ -34,6 +35,14 @@ import { SetClientPosition, SetOpponentPosition, SetUser } from './main.js';
         }
     }
 
+    function disableCombat() {
+        buttons[2].setAttribute("disabled", "disabled");
+    }
+    
+    function enableCombat() {
+        buttons[2].removeAttribute("disabled");
+    }
+
     /**
      * Set message text
      * @param {string} text
@@ -49,7 +58,7 @@ import { SetClientPosition, SetOpponentPosition, SetUser } from './main.js';
         } else if (text > 1) {
             connect.innerHTML = text + " Players Currently Online";
         } else {
-            connect.innerHTML = "huh? something went wrong...";
+            connect.innerHTML = "oops.. something broke...";
         }
     }
 
@@ -113,9 +122,10 @@ import { SetClientPosition, SetOpponentPosition, SetUser } from './main.js';
             SetOpponentPosition(arg1, arg2, arg3);
         });
 
-        socket.on("sendCombat", (arg1, arg2, arg3, arg4) => {
+        socket.on("sendCombat", (arg1) => {
             //console.log("new location X:" + arg1 + ', Y:' + arg2);
-            SetCombatZone(arg1, arg2, arg3, arg4);
+            SetCombatZone(arg1);
+            disableCombat();
         });
         
         socket.on("end", () => {

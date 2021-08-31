@@ -76,7 +76,7 @@ function initiateCombat(usr) {
 	//check if already in a zone 
 	for (let i = 0; i < users.length; i++) {
 		if (usr == users[i]) {
-			users[i].sendCombat(usr.socket.id, usr.x, usr.y, usr.rad);
+			users[i].sendCombat(usr.socket.id);	//for now just send to initiating client
 		}
 	}
 
@@ -86,7 +86,7 @@ function initiateCombat(usr) {
 	const cmbt = new Zone(usr.x, usr.y);
 	zones.push(cmbt);
 	console.log("New Combat Zone Initiated by " + 
-		usr.socket.id + " at " + usr.x + ", " + usr.y + " with radius " + rad);
+		usr.socket.id + " at " + usr.x + ", " + usr.y + " with radius " + usr.attRad);
 }
 
 //updates connected count
@@ -218,8 +218,8 @@ class User {
 	}
 
 	//Sends combat zone to user
-	sendCombat(id, x, y, rad) {
-		this.socket.emit("sendCombat", id, x, y, rad);
+	sendCombat(id) {
+		this.socket.emit("sendCombat", id);
 	}
 
 }

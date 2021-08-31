@@ -31,6 +31,7 @@ let players = []; //user data
 let opponents = []; //opponents to render
 
 let cPlayer = null;
+let cPlayerUsr = null;
 let cPlayerID = null;
 let pX = -10;
 let pY = -10;
@@ -43,13 +44,6 @@ function createGrid(xIn, yIn) {
         width: gDim - pixThic,
         height: gDim - pixThic,
 
-        // text properties
-        text: {
-            text: 'X',
-            color: 'black',
-            font: '10px Arial, sans-serif',
-            anchor: {x: 0.5, y: 0.5}
-        },
     });
 
     cells.push(gridSQR);
@@ -95,8 +89,8 @@ function BuildPixelGrid() {
     });
     //Area1.addChild(cPlayer);
 
-    for (let i=0; i < gridX; i++) {
-        for (let j=0; j < gridY; j++) {
+    for (let j=0; j < gridY; j++) {
+        for (let i=0; i < gridX; i++) {
             createGrid(i*gDim,j*gDim);
         }
     }
@@ -131,8 +125,10 @@ function RefreshPlayers() {
 
     //rebuild
     for(let i=0; i < players.length; i++) {
-        //console.log("listing user obj #" + i + ": " + players[i].id);
-        CreateUserObj(players[i].x, players[i].y);
+        if(players[i].id != cPlayerID) { //dont build client 
+            //console.log("listing user obj #" + i + ": " + players[i].id);
+            CreateUserObj(players[i].x, players[i].y);            
+        }
 
         // console.log("rebuilding opponent " + players[i].id 
         //     + " @ pos " + players[i].x + ", " + players[i].y);
@@ -142,13 +138,25 @@ function RefreshPlayers() {
 //Functions called by CLIENT 
 export function SetClientPosition(id, x, y) {
 
+    //init creation
+    if(cPlayerID == null) { 
+        cPlayerID = id; //set ID
+        console.log("Setup Client " + cPlayerID + " at pos: " + x + ", " + y);
+        const user = new User(id, x, y);
+
+        cPlayerUsr = user;
+        players.push(user);
+
+    } else {
+        console.log("Client object already added, why is this being called again?");
+    }
+    
+    //Update positions
+    //set positions of client 
+    cPlayerUsr.xG = x;
+    cPlayerUsr.yG = y;
     pX = (x * gDim) - (gDim/4);
     pY = (y * gDim) - (gDim/4);
-
-    if(cPlayerID == null) {
-        cPlayerID = id; //set ID
-    }
-    console.log("Setup Client " + cPlayerID + " at pos: " + x + ", " + y);
         
 }
 
@@ -170,7 +178,7 @@ export function SetOpponentPosition(id, x, y) {
     console.log("opponent not found: " + id);
     
 }
-
+//Create/Remove opponents
 export function SetUser(id, val, x, y, rad) {  
     if (val == 0) {
         console.log("Remove opponent: " + id);
@@ -198,12 +206,40 @@ export function SetUser(id, val, x, y, rad) {
 }
 
 //for updating opponent positions
-export function SetCombatZone(id, x, y, r) {
-    
-
-    
+export function SetCombatZone(id) {
     console.log("Combat zone started by: " + id);
     
+    //get player    
+    for(let i=0; i < players.length; i++) {
+        if(players[i].id == id) {
+            //create combat zone squares 
+            //just for temp, do it here based on radius, later calculate server-side
+        
+            //get square in location
+            var x = players[i].xG;  
+            var y = players[i].yG;  
+            var rad = 5;
+
+            for(let h = -rad; h < rad+1; h++) {
+                console.log('x');
+                for (let w = -rad; w < rad+1; w++) {
+                    //check points
+                    if((Math.abs(h))+(Math.abs(w)) <= rad) {
+                        SetCombatSquare(x+w, y+h);
+                    }
+                }
+            }
+            return;
+        }
+    }
+    
+}
+
+function SetCombatSquare(x, y) {
+    var sqr = cells[((y-1)*gridX) + (x-1)];
+
+    console.log(x + ' & ' + y + ' changing pos ' + (((y-1)*gridX) + (x-1)));
+    sqr.color = 'black';
 }
 
 //GameLoop setup
@@ -266,8 +302,10 @@ loop.start();
 	 */
 	constructor(id, x, y, rad) {
 		this.id = id;
-		this.x = (x * gDim) - (gDim/4);
-		this.y = (y * gDim) - (gDim/4);
+		this.x = (x * gDim) - (gDim/4); //screen space X
+		this.y = (y * gDim) - (gDim/4); //screen space Y
+        this.xG = x; //grid/local X
+        this.yG = y; //grid/local Y
         this.combat = false;
         this.attRad = rad;
 
