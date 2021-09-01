@@ -6,22 +6,7 @@
  */
 const users = [];
 const zones = [];
-
-/**
- * Find opponent for a user
- * @param {User} user
- */
-								//reuse this for combat round kickoff
-// function findOpponent(user) {
-// 	for (let i = 0; i < users.length; i++) {
-// 		if (
-// 			user !== users[i] &&
-// 			users[i].opponent === null
-// 		) {
-// 			new Game(user, users[i]).start();
-// 		}
-// 	}
-// }
+const combatSQRs = [];
 
 //To create NEW user, or remove OLD
 function configUser(user, val) {
@@ -72,21 +57,69 @@ function updateUserLocation(user) {
 	}
 }
 
-function initiateCombat(usr) { 
-	//check if already in a zone 
+function initiateCombat(usr) {
+	var newZone = false;
+	let loop = 1;
+
+	var rad = usr.attRad; 
+
+	console.log("Loop Check #1 ....");
+	//Go through all users for new combat zone 
 	for (let i = 0; i < users.length; i++) {
-		if (usr == users[i]) {
-			users[i].sendCombat(usr.socket.id);	//for now just send to initiating client
+		console.log("combat state: " + users[i].combat);
+		if ((usr == users[i]) && (users[i].combat == false)) { //check if initiator is already in a zone
+			users[i].setCombat(true);
+
+			var x = usr.x;
+            var y = usr.y;
+            //iterate over HxW square area
+            for(let h = -rad; h < rad+1; h++) {
+                for (let w = -rad; w < rad+1; w++) {
+                    //check points & fill
+                    if((Math.abs(h))+(Math.abs(w)) <= rad) {
+                        var pos = [x+w, y+h]
+						combatSQRs.push(pos);
+                    }
+                }
+            }
+			users[i].sendCombat(usr.socket.id);		
+			newZone = true; //new zone generated 
+
+		} else { //Check if other users are in new combat zone, if so, add to the zone as well
+			if(users[i].combat == false) {
+				//check if in zone - based on initators radius
+				var usrPos = [users[i].x, users[i].y];
+				if ((Math.abs(usrPos[0]-usr.x))+(Math.abs(usrPos[1])-usr.y) <= rad ) {
+					console.log("player " + users[i].socket.id + " is in combat zone!!");
+					users[i].setCombat(true);
+				}
+			}
+		}
+
+		//if newZone = true
+		//iterate list again? 
+		if(i == (users.length-1) && (newZone == true)) {
+			console.log("Number of combat squares active: " + combatSQRs.length);
+			loop++;
+			newZone = false;
+			i = 0; //reset loop
+			console.log("Looping through again, loop check #" + loop);
 		}
 	}
 
-	//if so, add to zone 
+	//debug combat squares currently active 
+	// for (let i = 0; i < combatSQRs.length; i++) { 
+	// 	console.log("Combat square at: " + combatSQRs[i]);
+	// }
 
 	//else create new zone
 	const cmbt = new Zone(usr.x, usr.y);
 	zones.push(cmbt);
 	console.log("New Combat Zone Initiated by " + 
 		usr.socket.id + " at " + usr.x + ", " + usr.y + " with radius " + usr.attRad);
+
+	//TODO - generate combat zone server side, send to all users in chunk 
+
 }
 
 //updates connected count
@@ -131,6 +164,15 @@ class User {
 		this.x = 0;
 		this.y = 0;
 		this.attRad = 5;
+		this.combat = false;
+	}
+
+	/**
+	 * Set combat value
+	 * @param {boolean} bool
+	 */	
+	setCombat(bo) {
+		this.combat = bo;
 	}
 
 	/**
@@ -138,7 +180,6 @@ class User {
 	 * @param {number} move
 	 */
 	setMove(move) {
-
 		if(move == 1) {
 			//console.log("Move Up: " + move);
 			this.y--;
@@ -150,8 +191,7 @@ class User {
 			this.updateLoc(this.x, this.y);
 			updateUserLocation(this);
 		} else if (move == 3) {
-			console.log("Combat Engage: " + move);
-			this.combat = true;
+			//console.log("Combat Engage: " + move);
 			initiateCombat(this);
 		} else if (move == 4) {
 			//console.log("Move Right: " + move);
@@ -166,14 +206,6 @@ class User {
 		} else {
 			console.log("Unknown input: " + move);
 		}
-		// if (
-		// 	!this.opponent ||
-		// 	guess <= GUESS_NO ||
-		// 	guess > GUESS_SCISSORS
-		// ) {
-		// 	return false;
-		// }
-		// this.guess = guess;
 		return true;
 	}
 
@@ -187,12 +219,6 @@ class User {
 	 * @param {Game} game
 	 * @param {User} opponent
 	 */
-	// start(game, opponent) {
-	// 	this.game = game;
-	// 	//this.opponent = opponent;
-	// 	this.guess = GUESS_NO;
-	// 	this.socket.emit("start");
-	// }
 
 	//connection count 
 	updateCount() {
@@ -221,9 +247,7 @@ class User {
 	sendCombat(id) {
 		this.socket.emit("sendCombat", id);
 	}
-
 }
-
 
 /**
  * Combat Zone Class
@@ -238,7 +262,6 @@ class Zone {
 	setZone(x, y) {
 
 	}
-
 }
 
 /**
@@ -276,19 +299,6 @@ module.exports = {
 
 		// socket.on("updateCount", () => {
 		// 	console.log("User has connected, currently connected: " + users.length + " users");
-
-		// });
-
-		// socket.on("guess", (guess) => {
-		// 	console.log("Guess: " + socket.id);
-		// 	if (user.setGuess(guess) && user.game.ended()) {
-		// 		user.game.score();
-		// 		user.game.start();
-		// 		storage.get('games', 0).then(games => {
-		// 			storage.set('games', games + 1);
-		// 		});
-		// 	}
-		// });
 
 		socket.on("move", (move) => {
 			console.log("Move Player: " + socket.id);

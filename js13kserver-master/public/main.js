@@ -135,6 +135,16 @@ function RefreshPlayers() {
     }
 }
 
+export function RefreshOnConnection() {
+    //temp for now, refresh primary players array
+    for(let i=0; i < players.length; i++) {
+        players[i].isActive = false;
+    }
+    players.length = 0;
+    players = []
+
+    RefreshPlayers();
+}
 //Functions called by CLIENT 
 export function SetClientPosition(id, x, y) {
 
@@ -142,7 +152,7 @@ export function SetClientPosition(id, x, y) {
     if(cPlayerID == null) { 
         cPlayerID = id; //set ID
         console.log("Setup Client " + cPlayerID + " at pos: " + x + ", " + y);
-        const user = new User(id, x, y);
+        const user = new User(id, x, y, 7);
 
         cPlayerUsr = user;
         players.push(user);
@@ -205,25 +215,22 @@ export function SetUser(id, val, x, y, rad) {
     }
 }
 
-//for updating opponent positions
+//Draw Combat Zone around player
 export function SetCombatZone(id) {
     console.log("Combat zone started by: " + id);
     
-    //get player    
+    //draw grid circle around client player
     for(let i=0; i < players.length; i++) {
+        //find player in players array
         if(players[i].id == id) {
-            //create combat zone squares 
-            //just for temp, do it here based on radius, later calculate server-side
-        
-            //get square in location
+            //get x & y loc, get radius
             var x = players[i].xG;  
             var y = players[i].yG;  
-            var rad = 5;
-
-            for(let h = -rad; h < rad+1; h++) {
-                console.log('x');
-                for (let w = -rad; w < rad+1; w++) {
-                    //check points
+            var rad = players[i].attRad;
+            //iterate over HxW square area
+            for(let h = -rad+1; h < rad; h++) {
+                for (let w = -rad+1; w < rad; w++) {
+                    //check points & fill
                     if((Math.abs(h))+(Math.abs(w)) <= rad) {
                         SetCombatSquare(x+w, y+h);
                     }
@@ -232,14 +239,12 @@ export function SetCombatZone(id) {
             return;
         }
     }
-    
 }
 
 function SetCombatSquare(x, y) {
     var sqr = cells[((y-1)*gridX) + (x-1)];
-
-    console.log(x + ' & ' + y + ' changing pos ' + (((y-1)*gridX) + (x-1)));
-    sqr.color = 'black';
+    sqr.color = '#401111';
+    //console.log(x + ' & ' + y + ' changing pos ' + (((y-1)*gridX) + (x-1)));
 }
 
 //GameLoop setup

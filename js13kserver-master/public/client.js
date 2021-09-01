@@ -1,7 +1,7 @@
 "use strict";
 
 import { SetClientPosition, SetOpponentPosition, SetUser,
-    SetCombatZone } from './main.js';
+    SetCombatZone, RefreshOnConnection } from './main.js';
 
 (function () {
 
@@ -125,7 +125,8 @@ import { SetClientPosition, SetOpponentPosition, SetUser,
         socket.on("sendCombat", (arg1) => {
             //console.log("new location X:" + arg1 + ', Y:' + arg2);
             SetCombatZone(arg1);
-            disableCombat();
+            //disableCombat();
+            disableButtons();
         });
         
         socket.on("end", () => {
@@ -143,7 +144,8 @@ import { SetClientPosition, SetOpponentPosition, SetUser,
             disableButtons();
             setMessage("[Connection lost]");
             setMessageConnect("Attempting to reconnect...")
-            //setMessageConnect("Currenly Online Players: n/a")
+            
+            RefreshOnConnection();
         });
 
         socket.on("error", () => {
