@@ -109,12 +109,6 @@ function BuildPixelGrid() {
     //     }
     // }
 
-    var strInput = 'Test Text';
-    var size = 1000 / (strInput.length * 4.8);
-    size -= size % 4;
-    
-    //build text
-    DrawText(strInput, Math.min(24, size));
 
 }
 
@@ -129,7 +123,7 @@ function DrawText(string,size) {
             needed.push(letter);
         }
     }
-    console.log("New text prepped '" + string +"'");
+    console.log("New text prepped: '" + string +"'");
 
     context.fillStyle = 'black';
     var currX = 0;
@@ -152,6 +146,7 @@ function DrawText(string,size) {
         }
         currX += size + addX;
     }
+    console.log('Drew ' + string + ' at size ' + size);
 }
 
 function CreateUserObj(xIn, yIn) {
@@ -329,6 +324,7 @@ const loop = GameLoop({
             BuildPixelGrid()
         }
 
+        
         // if(refresh) {
         //     RefreshPlayers();
         // }
@@ -360,6 +356,13 @@ const loop = GameLoop({
             sideUIB.render();
         }
 
+        var strInput = 'Test Text 01';
+        var size = 1000 / (strInput.length * 4.8);
+        size -= size % 4;
+        
+        //build text
+        //DrawText(strInput, 10); //Math.min(24, size)
+    
 
     },
 });
@@ -555,11 +558,11 @@ letters = {
         [1, 1, 1, 1, 1]
     ],
     'X': [
-        [1, , , , 1],
-        [, 1, , 1],
-        [, , 1],
-        [, 1, , 1],
-        [1, , , , 1]
+        [1, , , 1,],
+        [1, , , 1,],
+        [, 1, 1],
+        [1, , , 1,],
+        [1, , , 1,]
     ],
     'Y': [
         [1, , 1],
@@ -576,15 +579,15 @@ letters = {
         [1, 1, 1, 1, 1]
     ],
     '0': [
-        [1, 1, 1],
-        [1, , 1],
-        [1, , 1],
-        [1, , 1],
-        [1, 1, 1]
+        [ , 1, 1, ],
+        [1, , , 1],
+        [1, ,1, 1],
+        [1,1, , 1],
+        [ , 1, 1, ]
     ],
     '1': [
         [, 1],
-        [, 1],
+        [1, 1],
         [, 1],
         [, 1],
         [, 1]
