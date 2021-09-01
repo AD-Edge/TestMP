@@ -33,8 +33,13 @@ let opponents = []; //opponents to render
 let cPlayer = null;
 let cPlayerUsr = null;
 let cPlayerID = null;
+let sideUIB = null;
 let pX = -10;
 let pY = -10;
+
+//text
+var needed = [];
+var letters;
 
 function createGrid(xIn, yIn) {
     const gridSQR = Sprite({
@@ -52,49 +57,101 @@ function createGrid(xIn, yIn) {
 
 function BuildPixelGrid() {
 
-    //grid area container
-    Area1 = Sprite({
-        type: 'obj',
-        x: 8,
-        y: 8,
-        width: areaX,
-        height: areaY,
+    // //grid area container
+    // Area1 = Sprite({
+    //     type: 'obj',
+    //     x: 8,
+    //     y: 8,
+    //     width: areaX,
+    //     height: areaY,
         
-        render() {
-            //this.context.setLineDash([2,10]);
-            this.context.lineWidth = 3;
-            this.context.strokeStyle = 'black';
-            this.context.strokeRect(0, 0, this.width, this.height);
-        }
-    });
-    console.log('areax:' + areaX);
+    //     render() {
+    //         //this.context.setLineDash([2,10]);
+    //         this.context.lineWidth = 3;
+    //         this.context.strokeStyle = 'black';
+    //         this.context.strokeRect(0, 0, this.width, this.height);
+    //     }
+    // });
+    // console.log('areax:' + areaX);
 
-    //block fill colour since render() somehow breaks it
-    Area1Col = Sprite({
-        x: 0,
-        y: 0,
-        color: 'black',
-        width: Area1.width,
-        height: Area1.height,
-    });
-    Area1.addChild(Area1Col);
+    // //block fill colour since render() somehow breaks it
+    // Area1Col = Sprite({
+    //     x: 0,
+    //     y: 0,
+    //     color: 'black',
+    //     width: Area1.width,
+    //     height: Area1.height,
+    // });
+    // Area1.addChild(Area1Col);
 
+    // //UI Test
+    // sideUIB = Sprite({ 
+    //     type: 'obj',
+    //     x: 0,
+    //     y: canvas.height - canvas.height/6,
+    //     color: '#333333',
+    //     width: canvas.width,
+    //     height: canvas.height/6,
+    // });
 
-    cPlayer = Sprite({
-        x: pX,
-        y: pY,
-        color: 'white',
-        width: gDim/2,
-        height: gDim/2,
-    });
-    //Area1.addChild(cPlayer);
+    // cPlayer = Sprite({
+    //     x: pX,
+    //     y: pY,
+    //     color: 'white',
+    //     width: gDim/2,
+    //     height: gDim/2,
+    // });
+    // //Area1.addChild(cPlayer);
 
-    for (let j=0; j < gridY; j++) {
-        for (let i=0; i < gridX; i++) {
-            createGrid(i*gDim,j*gDim);
+    // for (let j=0; j < gridY; j++) {
+    //     for (let i=0; i < gridX; i++) {
+    //         createGrid(i*gDim,j*gDim);
+    //     }
+    // }
+
+    var strInput = 'Test Text';
+    var size = 1000 / (strInput.length * 4.8);
+    size -= size % 4;
+    
+    //build text
+    DrawText(strInput, Math.min(24, size));
+
+}
+
+function DrawText(string,size) {
+    console.log("Text Size: " + size);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    string = string.toUpperCase();
+    for (var i = 0; i < string.length; i++) {
+        var letter = letters[string.charAt(i)];
+        if (letter) {
+            needed.push(letter);
         }
     }
+    console.log("New text prepped '" + string +"'");
 
+    context.fillStyle = 'black';
+    var currX = 0;
+
+    for (var i = 0; i < needed.length; i++) {
+        var letter = needed[i];
+        var currY = 0;
+        var addX = 0;
+
+        for (var y = 0; y < letter.length; y++) {
+            var row = letter[y];
+            //console.log("Drawing row: " + row);
+            for (var x = 0; x < row.length; x++) {
+                if (row[x]) {
+                    context.fillRect(currX + x * size, currY, size, size);
+                }
+            }
+            addX = Math.max(addX, row.length * size);
+            currY += size;
+        }
+        currX += size + addX;
+    }
 }
 
 function CreateUserObj(xIn, yIn) {
@@ -134,8 +191,10 @@ function RefreshPlayers() {
         //     + " @ pos " + players[i].x + ", " + players[i].y);
     }
 }
-
 export function RefreshOnConnection() {
+    Area1 = null;
+    Area1Col = null;
+
     //temp for now, refresh primary players array
     for(let i=0; i < players.length; i++) {
         players[i].isActive = false;
@@ -143,7 +202,17 @@ export function RefreshOnConnection() {
     players.length = 0;
     players = []
 
+    for (var i = 0; i <= cells.length - 1; i++) {
+        //console.log('removing object from blocks');
+        cells[i].isActive = false;
+        //blocks[i].remove();
+    }
+    cells.length = 0;
+    cells = [];
+
+    //rebuild
     RefreshPlayers();
+    BuildPixelGrid();
 }
 //Functions called by CLIENT 
 export function SetClientPosition(id, x, y) {
@@ -152,7 +221,7 @@ export function SetClientPosition(id, x, y) {
     if(cPlayerID == null) { 
         cPlayerID = id; //set ID
         console.log("Setup Client " + cPlayerID + " at pos: " + x + ", " + y);
-        const user = new User(id, x, y, 7);
+        const user = new User(id, x, y, 5);
 
         cPlayerUsr = user;
         players.push(user);
@@ -287,6 +356,10 @@ const loop = GameLoop({
             cPlayer.render();
         }
 
+        if(sideUIB) {
+            sideUIB.render();
+        }
+
 
     },
 });
@@ -318,3 +391,209 @@ loop.start();
 	}
 
 }
+
+letters = {
+    'A': [
+        [, 1],
+        [1, , 1],
+        [1, , 1],
+        [1, 1, 1],
+        [1, , 1]
+    ],
+    'B': [
+        [1, 1],
+        [1, , 1],
+        [1, 1, 1],
+        [1, , 1],
+        [1, 1]
+    ],
+    'C': [
+        [1, 1, 1],
+        [1],
+        [1],
+        [1],
+        [1, 1, 1]
+    ],
+    'D': [
+        [1, 1],
+        [1, , 1],
+        [1, , 1],
+        [1, , 1],
+        [1, 1]
+    ],
+    'E': [
+        [1, 1, 1],
+        [1],
+        [1, 1, 1],
+        [1],
+        [1, 1, 1]
+    ],
+    'F': [
+        [1, 1, 1],
+        [1],
+        [1, 1],
+        [1],
+        [1]
+    ],
+    'G': [
+        [, 1, 1],
+        [1],
+        [1, , 1, 1],
+        [1, , , 1],
+        [, 1, 1]
+    ],
+    'H': [
+        [1, , 1],
+        [1, , 1],
+        [1, 1, 1],
+        [1, , 1],
+        [1, , 1]
+    ],
+    'I': [
+        [1, 1, 1],
+        [, 1],
+        [, 1],
+        [, 1],
+        [1, 1, 1]
+    ],
+    'J': [
+        [1, 1, 1],
+        [, , 1],
+        [, , 1],
+        [1, , 1],
+        [1, 1, 1]
+    ],
+    'K': [
+        [1, , , 1],
+        [1, , 1],
+        [1, 1],
+        [1, , 1],
+        [1, , , 1]
+    ],
+    'L': [
+        [1],
+        [1],
+        [1],
+        [1],
+        [1, 1, 1]
+    ],
+    'M': [
+        [1, 1, 1, 1, 1],
+        [1, , 1, , 1],
+        [1, , 1, , 1],
+        [1, , , , 1],
+        [1, , , , 1]
+    ],
+    'N': [
+        [1, , , 1],
+        [1, 1, , 1],
+        [1, , 1, 1],
+        [1, , , 1],
+        [1, , , 1]
+    ],
+    'O': [
+        [1, 1, 1],
+        [1, , 1],
+        [1, , 1],
+        [1, , 1],
+        [1, 1, 1]
+    ],
+    'P': [
+        [1, 1, 1],
+        [1, , 1],
+        [1, 1, 1],
+        [1],
+        [1]
+    ],
+    'Q': [
+        [0, 1, 1],
+        [1, , , 1],
+        [1, , , 1],
+        [1, , 1, 1],
+        [1, 1, 1, 1]
+    ],
+    'R': [
+        [1, 1],
+        [1, , 1],
+        [1, , 1],
+        [1, 1],
+        [1, , 1]
+    ],
+    'S': [
+        [1, 1, 1],
+        [1],
+        [1, 1, 1],
+        [, , 1],
+        [1, 1, 1]
+    ],
+    'T': [
+        [1, 1, 1],
+        [, 1],
+        [, 1],
+        [, 1],
+        [, 1]
+    ],
+    'U': [
+        [1, , 1],
+        [1, , 1],
+        [1, , 1],
+        [1, , 1],
+        [1, 1, 1]
+    ],
+    'V': [
+        [1, , , , 1],
+        [1, , , , 1],
+        [, 1, , 1],
+        [, 1, , 1],
+        [, , 1]
+    ],
+    'W': [
+        [1, , , , 1],
+        [1, , , , 1],
+        [1, , , , 1],
+        [1, , 1, , 1],
+        [1, 1, 1, 1, 1]
+    ],
+    'X': [
+        [1, , , , 1],
+        [, 1, , 1],
+        [, , 1],
+        [, 1, , 1],
+        [1, , , , 1]
+    ],
+    'Y': [
+        [1, , 1],
+        [1, , 1],
+        [, 1],
+        [, 1],
+        [, 1]
+    ],
+    'Z': [
+        [1, 1, 1, 1, 1],
+        [, , , 1],
+        [, , 1],
+        [, 1],
+        [1, 1, 1, 1, 1]
+    ],
+    '0': [
+        [1, 1, 1],
+        [1, , 1],
+        [1, , 1],
+        [1, , 1],
+        [1, 1, 1]
+    ],
+    '1': [
+        [, 1],
+        [, 1],
+        [, 1],
+        [, 1],
+        [, 1]
+    ],
+    ' ': [
+        [, ,],
+        [, ,],
+        [, ,],
+        [, ,],
+        [, ,]
+    ]
+};
