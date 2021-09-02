@@ -1,4 +1,4 @@
-const { init, GameLoop, Text, Sprite, imageAssets, track, pointer, Button} = kontra;
+const { init, GameLoop, Text, Sprite, track, pointer, Button, GameObject} = kontra;
 
 //get components from index
 const { canvas, context } = init();
@@ -39,9 +39,38 @@ let sideUIB = null;
 let pX = -10;
 let pY = -10;
 
-let draw = false;
-
 var needed = [];
+
+
+//Text prep temp
+var strInput = 'Test Text 01';
+var size = 1000 / (strInput.length * 4.8);
+size -= size % 4;
+var string = strInput.toUpperCase();
+for (var i = 0; i < string.length; i++) {
+    var letter = letters[string.charAt(i)];
+    if (letter) {
+        needed.push(letter);
+    }
+}
+
+let textObj = GameObject({
+    x: 8,
+    y: 324,
+    width: 200,
+    height: 30,
+   
+    render: function() {
+      // draw the game object normally (perform rotation and other transforms)
+      this.draw();      
+      // outline the game object
+      this.context.strokeStyle = 'red';
+      this.context.lineWidth = 1;
+      this.context.strokeRect(0, 0, this.width, this.height);
+
+      DrawText(4, this.x, this.y);
+    }
+});
 
 function createGrid(xIn, yIn) {
     const gridSQR = Sprite({
@@ -114,26 +143,19 @@ function BuildPixelGrid() {
 
 }
 
-function DrawText(string,size) {
+function DrawText(size, x, y) {
     //console.log("Text Size: " + size);
     //context.clearRect(0, 0, canvas.width, canvas.height);
 
-    string = string.toUpperCase();
-    for (var i = 0; i < string.length; i++) {
-        var letter = letters[string.charAt(i)];
-        if (letter) {
-            needed.push(letter);
-        }
-    }
     //console.log("New text prepped: '" + string +"'");
 
     context.fillStyle = 'black';
     var currX = 0;
-
+    
     for (var i = 0; i < needed.length; i++) {
         var letter = needed[i];
-        var currY = 340;
         var addX = 0;
+        var currY = 0;
 
         for (var y = 0; y < letter.length; y++) {
             var row = letter[y];
@@ -149,7 +171,6 @@ function DrawText(string,size) {
         currX += size + addX;
     }
     //console.log('Drew ' + string + ' at size ' + size);
-    draw = true;
 }
 
 function CreateUserObj(xIn, yIn) {
@@ -342,8 +363,6 @@ const loop = GameLoop({
             gridSQR.update();
         });
 
-        draw = false;
-
     },
     render: () => {
         if(Area1) {
@@ -360,24 +379,15 @@ const loop = GameLoop({
             sideUIB.render();
         }
 
-        var strInput = 'Test Text 01';
-        var size = 1000 / (strInput.length * 4.8);
-        size -= size % 4;
-        
-        //build text
-        if(!draw) {
-            DrawText(strInput, 4); //Math.min(24, size)
+        if(textObj) {
+            textObj.render();
         }
-    
 
     },
 });
 
 //Kick off the gameloop
 loop.start();
-
-
-
 
 /**
  * Client side user class
