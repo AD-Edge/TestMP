@@ -41,6 +41,13 @@ let pY = -10;
 
 var needed = [];
 
+//experimental image gen
+const testImg = new Image();
+
+
+
+
+
 
 //Text prep temp
 var strInput = 'Test Text 01';
